@@ -1,0 +1,10 @@
+node_modules/
+dist/
+reports/
+screenshots/
+playwright-report/
+test-results/
+playwright/.cache/
+.env
+*.log
+package-lock.json
