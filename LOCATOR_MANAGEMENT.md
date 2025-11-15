@@ -39,12 +39,12 @@ The file uses a simple **key=value** format:
 # Comment lines start with #
 locatorKey=selector
 
-# Multiple selectors can be comma-separated
+# Multiple selectors can be comma-separated (fallback order)
 searchInput=[placeholder*="search"], [placeholder*="Search"], input[type="text"]
 searchButton=button:has-text("Search")
 ```
 
-### Current Locators
+### Current Locators (18 Total)
 
 ```properties
 # ============================================
@@ -89,11 +89,12 @@ successMessage=.success-message
 ### Location
 `src/utils/locatorHelper.ts`
 
-### Methods
+### API Methods
 
 #### `getLocator(key: string): string`
-Get a single locator by key.
+Get a single locator selector by key.
 
+**Example:**
 ```typescript
 import { locatorHelper } from '../utils/locatorHelper';
 
@@ -102,8 +103,9 @@ const searchInputSelector = locatorHelper.getLocator('searchInput');
 ```
 
 #### `getLocators(keys: string[]): Record<string, string>`
-Get multiple locators at once.
+Get multiple locators at once as a record/object.
 
+**Example:**
 ```typescript
 const locators = locatorHelper.getLocators(['searchInput', 'searchButton']);
 // Returns: {
@@ -113,18 +115,20 @@ const locators = locatorHelper.getLocators(['searchInput', 'searchButton']);
 ```
 
 #### `hasLocator(key: string): boolean`
-Check if a locator exists before using it.
+Check if a locator exists before using it (prevents errors).
 
+**Example:**
 ```typescript
 if (locatorHelper.hasLocator('searchInput')) {
   const selector = locatorHelper.getLocator('searchInput');
-  // Use selector
+  await page.locator(selector).click();
 }
 ```
 
 #### `getAllLocators(): Map<string, string>`
-Get all available locators (useful for debugging).
+Get all available locators (useful for debugging and validation).
 
+**Example:**
 ```typescript
 const allLocators = locatorHelper.getAllLocators();
 allLocators.forEach((selector, key) => {
@@ -133,24 +137,27 @@ allLocators.forEach((selector, key) => {
 ```
 
 #### `printAllLocators(): void`
-Print all locators to console (for debugging).
+Print all locators to console with formatted output (debugging utility).
 
+**Example:**
 ```typescript
 locatorHelper.printAllLocators();
 // Output:
 // ========== Available Locators ==========
 // searchInput: [placeholder*="search"], [placeholder*="Search"], input[type="text"]
 // searchButton: button:has-text("Search"), [role="button"]:has-text("search")
-// ... more locators ...
+// searchResults: main
+// ... (15 more locators) ...
 // =========================================
 ```
 
 ---
 
-## Usage in Page Objects
+## Implementation Guide
 
-### Before (Hardcoded Locators)
+### In Page Objects
 
+#### Before (Hardcoded Locators)
 ```typescript
 export class SearchPage {
   private page: Page;
@@ -159,15 +166,19 @@ export class SearchPage {
 
   constructor(page: Page) {
     this.page = page;
-    // Locators hardcoded - difficult to update
+    // ❌ Locators hardcoded - difficult to maintain
     this.searchInput = page.locator('[placeholder*="search"], [placeholder*="Search"]').first();
     this.searchButton = page.getByRole('button', { name: /search/i }).first();
+  }
+
+  async search(query: string) {
+    await this.searchInput.fill(query);
+    await this.searchButton.click();
   }
 }
 ```
 
-### After (Using LocatorHelper)
-
+#### After (Using LocatorHelper)
 ```typescript
 import { locatorHelper } from '../utils/locatorHelper';
 
@@ -178,26 +189,32 @@ export class SearchPage {
 
   constructor(page: Page) {
     this.page = page;
-    // Locators loaded from properties file
+    // ✅ Locators loaded from properties file
     this.searchInput = page.locator(locatorHelper.getLocator('searchInput')).first();
     this.searchButton = page.locator(locatorHelper.getLocator('searchButton')).first();
+  }
+
+  async search(query: string) {
+    await this.searchInput.fill(query);
+    await this.searchButton.click();
   }
 }
 ```
 
----
-
-## Usage in Step Definitions
-
-You don't need to use locatorHelper directly in step definitions - the page objects handle it:
+### In Step Definitions
 
 ```typescript
-import { Given, Then } from '@cucumber/cucumber';
+import { Given, When, Then } from '@cucumber/cucumber';
 import { CustomWorld } from '../support/custom-world';
 
 Given('I am on the search page', async function (this: CustomWorld) {
   // Page object internally uses locators from UILocators.properties
   await this.searchPage.navigate();
+});
+
+When('I search for {string}', async function (this: CustomWorld, query: string) {
+  // Page object methods handle all locator usage
+  await this.searchPage.search(query);
 });
 
 Then('I should see search results', async function (this: CustomWorld) {
@@ -210,35 +227,42 @@ Then('I should see search results', async function (this: CustomWorld) {
 
 ## Adding New Locators
 
-### Step 1: Add to UILocators.properties
+### Step-by-Step Process
 
+#### Step 1: Add to UILocators.properties
 ```properties
-# Add your new locator
 myNewElement=[role="button"]:has-text("My Button")
+anotherElement=[class="new-element"]
 ```
 
-### Step 2: Use in Page Object
-
+#### Step 2: Use in Page Object Constructor
 ```typescript
 constructor(page: Page) {
   this.page = page;
   this.myElement = page.locator(locatorHelper.getLocator('myNewElement')).first();
+  this.anotherElement = page.locator(locatorHelper.getLocator('anotherElement')).first();
 }
 ```
 
-### Step 3: Create Method
-
+#### Step 3: Create Public Method
 ```typescript
 async clickMyElement() {
   await this.myElement.click();
 }
+
+async fillAnotherElement(text: string) {
+  await this.anotherElement.fill(text);
+}
 ```
 
-### Step 4: Use in Steps
-
+#### Step 4: Use in Step Definitions
 ```typescript
 When('I click my element', async function (this: CustomWorld) {
   await this.searchPage.clickMyElement();
+});
+
+When('I fill another element with {string}', async function (this: CustomWorld, text: string) {
+  await this.searchPage.fillAnotherElement(text);
 });
 ```
 
@@ -246,46 +270,51 @@ When('I click my element', async function (this: CustomWorld) {
 
 ## Best Practices
 
-### 1. **Naming Conventions**
+### Naming Conventions
 
 ✅ **DO:**
 - Use camelCase: `searchInput`, `loginButton`, `errorMessage`
-- Be descriptive: `submitButton` not `button1`
-- Group by page: `searchInput`, `searchButton` (search page locators)
+- Be descriptive: `submitButton` not `btn1`
+- Group by component: `loginUsername`, `loginPassword`, `loginButton`
+- Use clear intent: `modalCloseButton`, `dialogCancelAction`
 
 ❌ **DON'T:**
-- Use random names: `btn`, `elem`, `x`
-- Mix naming styles: `search_input` and `searchButton`
-- Use ambiguous names: `text`, `element`, `item`
+- Use random names: `elem`, `button_x`, `theInput`
+- Mix naming styles: `search_input` mixed with `searchButton`
+- Use ambiguous names: `text`, `element`, `item`, `box`
+- Use generic names: `primary`, `secondary`, `first`, `main`
 
-### 2. **Selector Strategies**
+### Selector Strategies
 
 ✅ **DO:**
-- Use role-based selectors: `[role="button"]`
-- Use semantic selectors: `input[type="text"]`
-- Use specific attributes: `[name="username"]`
-- Use text matchers: `:has-text("Login")`
+- Use role-based selectors: `[role="button"]`, `[role="navigation"]`
+- Use semantic HTML: `input[type="text"]`, `button`, `a`
+- Use specific attributes: `[name="username"]`, `[id="search"]`
+- Use text matchers: `:has-text("Login")`, `:has-text(/exact|regex/)`
+- Use combination: `[role="button"][aria-label="Submit"]`
 
 ❌ **DON'T:**
-- Use generic selectors: `div`, `span`, `a`
-- Use index-based: `:nth-child(2)`
-- Use implementation details: `.react-component-123`
-- Use fragile XPath: `//div[@class='container']/div[1]/button`
+- Use generic selectors: `div`, `span`, `a` alone
+- Use index-based: `:nth-child(2)`, `nth-of-type(3)` (fragile)
+- Use implementation details: `.react-component-123`, `.some-hash-1x2y3z`
+- Use XPath: `//div[@class='container']/div[1]/button` (hard to maintain)
+- Use overly complex CSS: Very long chains with many conditions
 
-### 3. **Multiple Selectors**
+### Multiple Selectors (Fallback Order)
 
-When an element might have multiple possible selectors:
+Use comma-separated selectors as fallbacks - first match wins:
 
 ```properties
-# First selector is tried first, then falls back to others
+# searchInput will try each selector in order until one matches
 searchInput=[placeholder*="search"], [placeholder*="Search"], input[type="text"]
+
+# This is useful for apps with multiple UI variations
+loginButton=button:has-text("Login"), [role="button"]:has-text("Sign In"), .login-btn
 ```
 
-Playwright will use the first match found.
+### File Organization
 
-### 4. **File Organization**
-
-Group related locators with comments:
+Group locators by page/component with comments:
 
 ```properties
 # ============================================
@@ -294,66 +323,120 @@ Group related locators with comments:
 usernameInput=[name="username"]
 passwordInput=[name="password"]
 loginButton=[role="button"]:has-text("Login")
+rememberMeCheckbox=[name="rememberMe"]
+forgotPasswordLink=a:has-text("Forgot Password")
 
 # ============================================
 # Dashboard Page
 # ============================================
-dashboardHeading=h1
-userMenu=[role="button"]:has-text("Profile")
+dashboardHeading=h1:has-text("Dashboard")
+userDropdown=[role="button"][aria-label="User Menu"]
+logoutButton=button:has-text("Logout")
+userAvatar=[class*="avatar"]
+
+# ============================================
+# Common Elements (Used Across Multiple Pages)
+# ============================================
+modal=[role="dialog"]
+modalCloseButton=button[aria-label="Close"]
+successMessage=[role="alert"][class*="success"]
+errorMessage=[role="alert"][class*="error"]
+loadingSpinner=[role="status"]
 ```
 
 ---
 
 ## Error Handling
 
-### Locator Not Found
-
-If you try to get a locator that doesn't exist:
+### Locator Not Found at Runtime
 
 ```typescript
 const selector = locatorHelper.getLocator('nonexistentKey');
-// Throws Error: Locator not found: "nonexistentKey". 
-// Available locators: searchInput, searchButton, ...
+// Throws Error:
+// Locator not found: "nonexistentKey"
+// Available locators: searchInput, searchButton, loginButton, ...
+
+// Solution: Add the locator to UILocators.properties
 ```
 
-**Solution:** Add the locator to `UILocators.properties` file.
-
-### File Not Found
-
-If `UILocators.properties` doesn't exist:
+### Properties File Not Found
 
 ```
 Error: Locator file not found: /path/to/UILocators.properties
+
+Solution: Ensure file exists at: src/locators/UILocators.properties
 ```
 
-**Solution:** Ensure the file exists at `src/locators/UILocators.properties`.
+### Locator Validation
+
+```typescript
+// Check before using (prevents runtime errors)
+if (locatorHelper.hasLocator('myLocator')) {
+  const selector = locatorHelper.getLocator('myLocator');
+  // Safe to use
+} else {
+  console.error('Locator not defined: myLocator');
+}
+```
 
 ---
 
-## Debugging
+## Debugging & Troubleshooting
 
 ### Print All Locators
+
+Useful for understanding what's available:
 
 ```typescript
 import { locatorHelper } from '../src/utils/locatorHelper';
 
-// In a test file or hook
+// In a test or hook
 locatorHelper.printAllLocators();
+
+// Output:
+// ========== Available Locators ==========
+// searchInput: [placeholder*="search"], [placeholder*="Search"], input[type="text"]
+// searchButton: button:has-text("Search"), [role="button"]:has-text("search")
+// ... (16 more) ...
+// =========================================
 ```
 
-### Check Specific Locator
+### Check Specific Locator Value
 
 ```typescript
-console.log(locatorHelper.getLocator('searchInput'));
-// Output: [placeholder*="search"], [placeholder*="Search"], input[type="text"]
+const selector = locatorHelper.getLocator('searchInput');
+console.log('searchInput selector:', selector);
+// Output: searchInput selector: [placeholder*="search"], [placeholder*="Search"], input[type="text"]
 ```
 
-### Log on Startup
+### Verify on Startup
 
-The locatorHelper automatically logs when it loads:
+The locatorHelper logs automatically:
 
 ```
 ✓ Loaded 18 locators from UILocators.properties
+```
+
+### Common Issues & Solutions
+
+**Issue:** "Locator not found" error
+```
+Solution: Add locator to UILocators.properties
+Properties: myElement=[role="button"]:has-text("Click Me")
+```
+
+**Issue:** Selector doesn't match any elements
+```
+Solution: Update the selector in UILocators.properties
+Before: loginButton=.btn-login
+After: loginButton=[role="button"]:has-text("Login")
+```
+
+**Issue:** Multiple elements match the same locator
+```
+Solution: Make the selector more specific
+Before: modal=[role="dialog"]
+After: modal=[role="dialog"][class*="primary"]
 ```
 
 ---
@@ -362,111 +445,195 @@ The locatorHelper automatically logs when it loads:
 
 ### Converting Existing Page Objects
 
-1. **Extract hardcoded selectors**:
-   ```typescript
-   // Before
-   this.searchInput = page.locator('[placeholder*="search"]').first();
-   ```
+#### Step 1: Extract Hardcoded Selectors
 
-2. **Add to UILocators.properties**:
-   ```properties
-   searchInput=[placeholder*="search"]
-   ```
+```typescript
+// Before
+this.searchInput = page.locator('[placeholder*="search"]').first();
+this.searchButton = page.getByRole('button', { name: /search/i }).first();
+```
 
-3. **Update page object**:
-   ```typescript
-   import { locatorHelper } from '../utils/locatorHelper';
-   
-   this.searchInput = page.locator(locatorHelper.getLocator('searchInput')).first();
-   ```
+#### Step 2: Add to UILocators.properties
 
----
+```properties
+searchInput=[placeholder*="search"]
+searchButton=[role="button"]:has-text("Search")
+```
 
-## Performance
+#### Step 3: Update Page Object
 
-- **Initialization**: Locators are loaded once when the application starts
-- **Access**: O(1) lookup time using Map
-- **Memory**: Minimal - only stores selector strings
+```typescript
+import { locatorHelper } from '../utils/locatorHelper';
 
----
-
-## Integration with CI/CD
-
-The locator helper works seamlessly in CI/CD pipelines. The properties file should be committed to version control:
-
-```bash
-git add src/locators/UILocators.properties
-git add src/utils/locatorHelper.ts
+constructor(page: Page) {
+  this.page = page;
+  this.searchInput = page.locator(locatorHelper.getLocator('searchInput')).first();
+  this.searchButton = page.locator(locatorHelper.getLocator('searchButton')).first();
+}
 ```
 
 ---
 
-## Future Enhancements
+## Performance Considerations
 
-Potential improvements:
-
-- Support for environment-specific locators (dev vs. staging vs. production)
-- Locator validation (ensure selectors exist on page)
-- Performance metrics (measure selector match time)
-- Visual debugging (highlight elements using locators)
-- Locator versioning (track changes to selectors)
+- **Initialization**: Locators loaded once at application start (negligible overhead)
+- **Access Time**: O(1) Map lookup - instant access to any locator
+- **Memory**: Minimal - only stores selector strings (KB of memory for 18+ locators)
+- **No Runtime Overhead**: Direct string lookup, no parsing or compilation
 
 ---
 
-## Troubleshooting
+## CI/CD Integration
+
+The locator system integrates seamlessly with CI/CD pipelines:
+
+```bash
+# Version control the locator file
+git add src/locators/UILocators.properties
+git add src/utils/locatorHelper.ts
+
+# Use in any environment (dev, staging, production)
+npm test  # Loads locators and runs tests
+```
+
+### Multi-Environment Setup (Future Enhancement)
+
+```properties
+# Could support environment-specific locators
+app.url=https://app.example.com
+app.env=production
+
+# Or separate files:
+UILocators.dev.properties
+UILocators.staging.properties
+UILocators.production.properties
+```
+
+---
+
+## FAQs & Common Questions
 
 ### Q: How do I use the same locator for multiple elements?
 
-**A:** Define it once and use the same key in multiple page objects:
+**A:** Define once, use in multiple page objects:
 
 ```properties
 # UILocators.properties
 primaryButton=[role="button"]:has-text("Submit")
+```
 
-# SearchPage.ts
+```typescript
+// SearchPage.ts
 this.submitButton = page.locator(locatorHelper.getLocator('primaryButton'));
 
-# LoginPage.ts
+// LoginPage.ts
 this.submitButton = page.locator(locatorHelper.getLocator('primaryButton'));
 ```
 
-### Q: Can I update locators without restarting?
+### Q: Can I dynamically update locators without restarting?
 
-**A:** Currently, locators are loaded once at startup. For development, restart the test runner:
+**A:** Currently locators load at startup. To update:
 
 ```powershell
+# Restart test runner
 npm test
 ```
 
-### Q: What format should I use for complex selectors?
+Future enhancement could support hot-reloading.
 
-**A:** Use Playwright's selector syntax (CSS, Xpath, role-based, etc.):
+### Q: What's the best selector strategy?
+
+**A:** In priority order:
+
+1. **Role-based**: `[role="button"]`, `[role="navigation"]` (Best - semantic)
+2. **Text matching**: `:has-text("Login")` (Good - user-facing)
+3. **Attributes**: `[name="username"]`, `[id="search"]` (Good - semantic)
+4. **CSS classes**: `.login-btn` (Acceptable - verify stability)
+5. **XPath**: (Avoid - difficult to maintain)
+
+### Q: How do I handle dynamic elements?
+
+**A:** Use flexible selectors:
 
 ```properties
-# CSS
-button.primary.large=[class*="primary"][class*="large"]
+# Instead of hardcoding IDs that change
+userItem=a[href*="/user/"]
 
-# Role-based
-submitButton=[role="button"]:has-text("Submit")
+# Use patterns that match variations
+itemRow=tr[data-testid*="row"]
 
-# Attribute
-searchInput=[type="search"][name="q"]
+# Use role selectors
+sortButton=[role="button"][aria-label*="Sort"]
+```
 
-# Text matching
+### Q: Can I use regex in selectors?
+
+**A:** Yes, use Playwright's regex syntax:
+
+```properties
+# Exact text match (case-insensitive)
 helpLink=a:has-text(/help|support/i)
+
+# Partial match
+errorMessage=text=/error|failed/
+
+# Complex pattern
+statusBadge=[class=/badge-(active|inactive|pending)/]
 ```
 
 ---
 
-## Summary
+## Summary Table
 
-The Locator Management System provides:
+| Feature | Benefit | Example |
+|---------|---------|---------|
+| **Centralized Storage** | Single source of truth for selectors | UILocators.properties |
+| **Easy Updates** | Change selector without touching code | Edit properties file, restart |
+| **Reusability** | Use same locator across page objects | primaryButton in 3 pages |
+| **Maintainability** | Organized, grouped by component | Login page locators section |
+| **Error Prevention** | Catch missing locators immediately | hasLocator() checks |
+| **Debugging** | Print all locators for troubleshooting | printAllLocators() utility |
+| **Scalability** | Grows with project without cluttering code | 50+ locators still organized |
 
-✅ Centralized locator storage  
-✅ Easy selector updates  
-✅ Better maintainability  
-✅ Reduced code duplication  
-✅ Improved collaboration  
-✅ Quick debugging capabilities  
+---
 
-Use this system to keep your test framework clean, maintainable, and easy to update!
+## Complete Example Workflow
+
+```typescript
+// 1. Define in UILocators.properties
+// searchInput=[placeholder*="search"]
+// searchButton=button:has-text("Search")
+
+// 2. Use in SearchPage.ts
+constructor(page: Page) {
+  this.searchInput = page.locator(locatorHelper.getLocator('searchInput')).first();
+  this.searchButton = page.locator(locatorHelper.getLocator('searchButton')).first();
+}
+
+async search(query: string) {
+  await this.searchInput.fill(query);
+  await this.searchButton.click();
+}
+
+// 3. Use in steps
+When('I search for {string}', async function (this: CustomWorld, query: string) {
+  await this.searchPage.search(query);
+});
+
+// 4. Run test - locators loaded automatically from properties file
+// npm test
+```
+
+---
+
+## Key Takeaways
+
+✅ Keep all selectors in `UILocators.properties`  
+✅ Use `locatorHelper` to access selectors  
+✅ Use descriptive camelCase names  
+✅ Prefer role-based & semantic selectors  
+✅ Group by component/page for organization  
+✅ Update selectors without touching code  
+✅ Use `hasLocator()` for defensive checks  
+✅ Print all locators for debugging  
+✅ Keep single responsibility (page objects = behavior, not selectors)
