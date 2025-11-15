@@ -1,5 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { config } from '../utils/config';
+import { locatorHelper } from '../utils/locatorHelper';
 
 export class SearchPage {
   private page: Page;
@@ -11,11 +12,12 @@ export class SearchPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.searchInput = page.locator('[placeholder*="search"], [placeholder*="Search"], input[type="text"]').first();
-    this.searchButton = page.getByRole('button', { name: /search/i }).first();
-    this.searchResults = page.locator('main').first();
-    this.noResultsMessage = page.locator('text=/no.*result/i').first();
-    this.resultItems = page.locator('a[href*="/docs"], article, [role="article"]').first();
+    // Initialize locators from UILocators.properties file
+    this.searchInput = page.locator(locatorHelper.getLocator('searchInput')).first();
+    this.searchButton = page.locator(locatorHelper.getLocator('searchButton')).first();
+    this.searchResults = page.locator(locatorHelper.getLocator('searchResults')).first();
+    this.noResultsMessage = page.locator(locatorHelper.getLocator('noResultsMessage')).first();
+    this.resultItems = page.locator(locatorHelper.getLocator('resultItems')).first();
   }
 
   async navigate(url: string = config.baseUrl) {
