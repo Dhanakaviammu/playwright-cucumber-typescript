@@ -42,14 +42,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cucumber-reports-${{ matrix.node-version }}
-          path: |
-            reports/
-            playwright-report/
-
-      - name: Publish test results to GitHub
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: reports/cucumber-report.json
-          check_name: Test Results (${{ matrix.node-version }})
-          comment_mode: always
+          path: reports/
+          if-no-files-found: warn
