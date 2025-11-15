@@ -9,6 +9,10 @@ module.exports = {
     ],
     formatOptions: { snippetInterface: 'async-await' },
     parallel: 1,
-    paths: ['src/features/**/*.feature']
+    paths: ['src/features/**/*.feature'],
+    strict: true,
+    dryRun: false,
+    failFast: false,
+    retry: 0
   }
 };
