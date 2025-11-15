@@ -47,9 +47,10 @@ jobs:
             reports/
             playwright-report/
 
-      - name: Publish test results
+      - name: Publish test results to GitHub
         if: always()
-        uses: daun/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: reports/cucumber-report.json
           check_name: Test Results (${{ matrix.node-version }})
+          comment_mode: always
