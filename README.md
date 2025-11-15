@@ -336,6 +336,99 @@ This framework prioritizes:
 
 ---
 
+## 🤖 GitHub Actions CI/CD Pipeline
+
+This framework includes a **GitHub Actions workflow** that automatically runs tests on every push to the `main` branch and on pull requests.
+
+### Workflow Features
+
+✅ **Automatic Execution** - Runs on push and pull requests  
+✅ **Multi-Node Testing** - Tests on Node.js 18.x and 20.x  
+✅ **Smart Headless Mode** - Automatically uses headless for Linux CI/CD  
+✅ **Artifact Upload** - Test reports available for download  
+✅ **Fast Feedback** - ~2 minutes per run  
+
+### Workflow File
+
+Located at: `.github/workflows/test.yml`
+
+### Workflow Steps
+
+1. **Checkout** - Pulls the latest code
+2. **Setup Node.js** - Installs specified version (18.x, 20.x)
+3. **Install Dependencies** - `npm install`
+4. **Install Browsers** - `npx playwright install --with-deps`
+5. **Build TypeScript** - `npm run build`
+6. **Run Tests** - `npm test` (with `CI=true` for headless mode)
+7. **Upload Reports** - Stores test reports as artifacts
+
+### How It Works
+
+When you push code or create a pull request:
+
+```
+Push to main branch
+        ↓
+GitHub Actions triggered
+        ↓
+Workflow runs (2 jobs × 2 Node versions = 4 parallel runs)
+        ↓
+Dependencies installed & browsers downloaded
+        ↓
+TypeScript compiled
+        ↓
+Cucumber tests executed
+        ↓
+Reports uploaded as artifacts
+        ↓
+Check GitHub Actions tab for results
+```
+
+### Environment Configuration
+
+**Local Development:**
+- Browser mode: **Headed** (visible window)
+- slowMo: 0ms
+- Set `HEADLESS=true` to test headless mode locally
+
+**GitHub Actions:**
+- Browser mode: **Headless** (no display needed)
+- Automatically set via `CI=true` environment variable
+- Required for Linux environments without X Server
+
+### Viewing Results
+
+1. Go to your repository
+2. Click **Actions** tab
+3. Select the latest workflow run
+4. View logs or download test report artifacts
+
+### Test Reports
+
+Test reports are generated in two formats:
+
+- **HTML Report**: `reports/cucumber-report.html` (detailed, user-friendly)
+- **JSON Report**: `reports/cucumber-report.json` (machine-readable)
+
+Both are uploaded as artifacts in GitHub Actions.
+
+### Customizing the Workflow
+
+To modify the workflow, edit `.github/workflows/test.yml`:
+
+```yaml
+# Change Node versions
+node-version: [16.x, 18.x, 20.x]
+
+# Run tests with specific tags
+run: npm test -- --tags @smoke
+
+# Change branch triggers
+branches: [ main, develop ]
+```
+
+---
+
 ## 📝 License & Support
 
 Created as a professional framework template for teams practicing BDD with Playwright.
