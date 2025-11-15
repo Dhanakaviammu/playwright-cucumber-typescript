@@ -21,17 +21,25 @@ Before(async function (this: CustomWorld) {
 });
 
 After(async function (this: CustomWorld, { pickle, result }) {
-  const page = getPage();
-  
-  if (result?.status === Status.FAILED) {
-    const screenshot = await page.screenshot({ 
-      path: `reports/screenshots/${pickle.name.replace(/\s+/g, '_')}.png`,
-      fullPage: true 
-    });
-    this.attach(screenshot, 'image/png');
+  try {
+    const page = getPage();
+    
+    if (result?.status === Status.FAILED && page) {
+      const screenshot = await page.screenshot({ 
+        path: `reports/screenshots/${pickle.name.replace(/\s+/g, '_')}.png`,
+        fullPage: true 
+      });
+      this.attach(screenshot, 'image/png');
+    }
+  } catch (error) {
+    console.error('Failed to capture screenshot:', error);
   }
   
-  await closeBrowser();
+  try {
+    await closeBrowser();
+  } catch (error) {
+    console.error('Failed to close browser:', error);
+  }
 });
 
 AfterAll(async function () {
