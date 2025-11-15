@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Playwright with Cucumber and TypeScript",
   "scripts": {
+    "build": "tsc",
     "test": "cucumber-js",
     "test:parallel": "cucumber-js --parallel 2",
     "test:tags": "cucumber-js --tags",
