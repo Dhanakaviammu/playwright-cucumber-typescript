@@ -2,9 +2,27 @@ name: Playwright Cucumber Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, qaCode ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, qaCode ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run tests on'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - qaCode
+      node_version:
+        description: 'Node.js version to test'
+        required: true
+        default: '20.x'
+        type: choice
+        options:
+          - 18.x
+          - 20.x
 
 jobs:
   test:
@@ -15,10 +33,12 @@ jobs:
       matrix:
         node-version: [18.x, 20.x]
       fail-fast: false
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
