@@ -34,9 +34,6 @@ jobs:
         node-version: [18.x, 20.x]
       fail-fast: false
     
-    # Skip matrix if workflow_dispatch with single version selected
-    if: ${{ github.event_name != 'workflow_dispatch' || contains(fromJson('["18.x", "20.x"]'), matrix.node-version) }}
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
