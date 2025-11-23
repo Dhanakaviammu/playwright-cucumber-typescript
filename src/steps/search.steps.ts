@@ -102,5 +102,5 @@ Then('I clear the search input', async function (this: CustomWorld) {
   
   // Verify it's cleared
   const value = await this.searchPage.getSearchInputValue();
-  await AssertionHelper.textToEqual(value, '', 'Search input should be cleared');
+  await AssertionHelper.textToEqual(value, '', 'Search input should be cleared.');
 });
