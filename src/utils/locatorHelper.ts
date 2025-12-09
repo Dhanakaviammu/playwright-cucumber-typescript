@@ -100,7 +100,7 @@ class LocatorHelper {
   public printAllLocators(): void {
     console.log('\n========== Available Locators ==========');
     Array.from(this.locators.entries()).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
+      //console.log(`${key}: ${value}`);
     });
     console.log('=========================================\n');
   }
