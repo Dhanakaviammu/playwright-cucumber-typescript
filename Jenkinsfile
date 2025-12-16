@@ -75,8 +75,9 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                echo "Running Cucumber tests with extended timeouts..."
-                bat 'npx cucumber-js --timeout 60000'
+                echo "Running Cucumber tests..."
+                echo "Using timeout configured in cucumber.js (60000ms)"
+                bat 'npx cucumber-js'
             }
         }
 
