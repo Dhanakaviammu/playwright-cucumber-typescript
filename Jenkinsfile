@@ -10,6 +10,7 @@ pipeline {
     environment {
         NODE_ENV = 'jenkins'
         WORKSPACE_PATH = "${WORKSPACE}"
+        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}\\playwright-browsers"
     }
 
     stages {
@@ -42,12 +43,22 @@ pipeline {
                 echo "STAGE: Installing dependencies..."
                 echo "=========================================="
                 
-                bat 'npm install'
+                bat '''
+                    echo Installing npm packages...
+                    call npm install
+                    
+                    echo.
+                    echo Installing Playwright browsers...
+                    echo Browser cache location: %PLAYWRIGHT_BROWSERS_PATH%
+                    
+                    call npx playwright install chromium --with-deps
+                    
+                    echo.
+                    echo Verifying installation...
+                    call npx playwright --version
+                '''
                 
-                echo "Downloading Playwright browsers for Jenkins user..."
-                bat 'npx playwright install --with-deps'
-                
-                echo "✓ Dependencies and browsers installed successfully"
+                echo "✓ Dependencies installed successfully"
             }
         }
 
