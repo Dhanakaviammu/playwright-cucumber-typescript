@@ -8,3 +8,6 @@ playwright/.cache/
 .env
 *.log
 package-lock.json
+# Allow .playwright browsers directory for CI/CD
+!.playwright/
+!.playwright/**
