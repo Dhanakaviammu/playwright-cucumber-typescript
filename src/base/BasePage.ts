@@ -38,7 +38,7 @@ export class BasePage {
    * @param url - The URL to navigate to
    * @param waitUntil - Wait condition: 'domcontentloaded' | 'load' | 'networkidle'
    */
-  async navigate(url: string = this.baseUrl, waitUntil: 'domcontentloaded' | 'load' | 'networkidle' = 'networkidle') {
+  async navigate(url: string = this.baseUrl, waitUntil: 'domcontentloaded' | 'load' | 'networkidle' = 'load') {
     const maxAttempts = 3;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {

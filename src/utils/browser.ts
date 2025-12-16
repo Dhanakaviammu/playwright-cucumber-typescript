@@ -33,8 +33,15 @@ export async function launchBrowser(browserType: 'chromium' | 'firefox' | 'webki
   });
   
   page = await context.newPage();
-  page.setDefaultTimeout(config.pageTimeout);
-  page.setDefaultNavigationTimeout(config.navigationTimeout);
+  
+  // Set timeouts from config (default 45 seconds for Jenkins, 30 seconds for local)
+  const pageTimeout = parseInt(process.env.PAGE_TIMEOUT || '45000');
+  const navigationTimeout = parseInt(process.env.NAVIGATION_TIMEOUT || '45000');
+  
+  console.log(`🔧 Setting timeouts - Page: ${pageTimeout}ms, Navigation: ${navigationTimeout}ms`);
+  
+  page.setDefaultTimeout(pageTimeout);
+  page.setDefaultNavigationTimeout(navigationTimeout);
   
   fixtures = new PageFixtures(page);
   
