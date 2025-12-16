@@ -11,6 +11,10 @@ pipeline {
         NODE_ENV = 'jenkins'
         WORKSPACE_PATH = "${WORKSPACE}"
         PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}\\playwright-browsers"
+        CI = 'true'
+        HEADLESS = 'true'
+        PAGE_TIMEOUT = '45000'
+        NAVIGATION_TIMEOUT = '45000'
     }
 
     stages {
