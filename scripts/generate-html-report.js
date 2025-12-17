@@ -2,14 +2,12 @@
 
 /**
  * Generate HTML report from Cucumber NDJSON report
- * NDJSON (newline-delimited JSON) is the proper format for Cucumber messages
- * Usage: node scripts/generate-html-report.js
+ * Uses @cucumber/html-formatter to convert NDJSON message format to interactive HTML
  */
 
 const fs = require('fs');
 const path = require('path');
-const { createReadStream } = require('fs');
-const CucumberHtmlFormatter = require('@cucumber/html-formatter').default;
+const { Readable } = require('stream');
 
 try {
   const reportsDir = path.join(__dirname, '..', 'reports');
@@ -32,21 +30,24 @@ try {
 
   console.log(`[INFO] Processing NDJSON report (${(stats.size / 1024).toFixed(2)} KB)...`);
 
-  // Create a read stream from the NDJSON file (messages are already in NDJSON format)
-  const messageStream = createReadStream(ndjsonReportPath, { encoding: 'utf-8' });
+  // Load the HTML formatter
+  const CucumberHtmlFormatter = require('@cucumber/html-formatter').default;
 
-  // Create the HTML formatter stream
-  const htmlStream = new CucumberHtmlFormatter();
+  // Read NDJSON file as text and create a readable stream
+  const ndjsonContent = fs.readFileSync(ndjsonReportPath, 'utf-8');
+  const ndjsonStream = Readable.from([ndjsonContent]);
 
-  // Collect the HTML output
+  // Create the HTML formatter (it expects a text stream with NDJSON lines)
+  const htmlFormatter = new CucumberHtmlFormatter();
+
+  // Collect HTML output
   let htmlContent = '';
   
-  htmlStream.on('data', (chunk) => {
+  htmlFormatter.on('data', (chunk) => {
     htmlContent += chunk.toString();
   });
 
-  htmlStream.on('end', () => {
-    // Verify we have HTML content
+  htmlFormatter.on('end', () => {
     if (!htmlContent || htmlContent.trim().length === 0) {
       console.error('[ERROR] HTML formatter produced empty output');
       process.exit(1);
@@ -59,18 +60,19 @@ try {
     console.log(`[OK] Report saved to: ${htmlReportPath}`);
   });
 
-  htmlStream.on('error', (error) => {
+  htmlFormatter.on('error', (error) => {
     console.error('[ERROR] Error generating HTML report:', error.message);
+    console.error('[ERROR] Stack:', error.stack);
     process.exit(1);
   });
 
-  messageStream.on('error', (error) => {
+  ndjsonStream.on('error', (error) => {
     console.error('[ERROR] Error reading NDJSON file:', error.message);
     process.exit(1);
   });
 
-  // Pipe the NDJSON messages through the HTML formatter
-  messageStream.pipe(htmlStream);
+  // Pipe the NDJSON stream directly to the formatter
+  ndjsonStream.pipe(htmlFormatter);
 
 } catch (error) {
   console.error('[ERROR] Error:', error.message);
