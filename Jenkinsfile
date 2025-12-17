@@ -73,7 +73,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Test & Report') {
             steps {
                 echo "=========================================="
                 echo "STAGE: Running Cucumber tests..."
@@ -82,23 +82,29 @@ pipeline {
                 
                 bat '''
                     call npx cucumber-js
-                    if errorlevel 1 echo Test execution completed with failures
+                    if errorlevel 1 (
+                        echo Test execution completed with failures
+                    ) else (
+                        echo Test execution completed successfully
+                    )
                 '''
             }
-        }
-
-        stage('Generate Report') {
-            steps {
-                echo "=========================================="
-                echo "STAGE: Generating HTML report from JSON..."
-                echo "=========================================="
-                
-                bat '''
-                    echo Generating HTML report from JSON data...
-                    call node scripts/generate-html-report.js
-                '''
-                
-                echo "✓ HTML report generated successfully"
+            post {
+                always {
+                    echo "=========================================="
+                    echo "STAGE: Generating HTML report from JSON..."
+                    echo "=========================================="
+                    
+                    bat '''
+                        echo Generating HTML report from JSON data...
+                        call node scripts/generate-html-report.js
+                        if errorlevel 1 (
+                            echo Warning: Report generation encountered an issue
+                        ) else (
+                            echo HTML report generated successfully
+                        )
+                    '''
+                }
             }
         }
     }
