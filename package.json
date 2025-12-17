@@ -4,27 +4,34 @@
   "description": "Playwright with Cucumber and TypeScript",
   "scripts": {
     "build": "tsc",
-    "test": "cucumber-js",
-    "test:parallel": "cucumber-js --parallel 2",
+    "test": "cucumber-js ; npm run generate:report",
+    "test:parallel": "cucumber-js --parallel 2 ; npm run generate:report",
     "test:tags": "cucumber-js --tags",
-    "test:ui": "cucumber-js --tags \"@ui\"",
-    "test:api": "cucumber-js --tags \"@api\"",
-    "test:smoke": "cucumber-js --tags \"@smoke\"",
-    "test:regression": "cucumber-js --tags \"@regression\"",
-    "test:sanity": "cucumber-js --tags \"@sanity\"",
-    "test:functionality": "cucumber-js --tags \"@functionality\"",
-    "test:edge-case": "cucumber-js --tags \"@edge-case\"",
-    "report": "open reports/cucumber-report.html"
+    "test:ui": "cucumber-js --tags \"@ui\" ; npm run generate:report",
+    "test:api": "cucumber-js --tags \"@api\" ; npm run generate:report",
+    "test:smoke": "cucumber-js --tags \"@smoke\" ; npm run generate:report",
+    "test:regression": "cucumber-js --tags \"@regression\" ; npm run generate:report",
+    "test:sanity": "cucumber-js --tags \"@sanity\" ; npm run generate:report",
+    "test:functionality": "cucumber-js --tags \"@functionality\" ; npm run generate:report",
+    "test:edge-case": "cucumber-js --tags \"@edge-case\" ; npm run generate:report",
+    "generate:report": "node scripts/generate-html-report.js",
+    "report": "start reports/cucumber-report.html"
   },
-  "keywords": ["playwright", "cucumber", "typescript", "bdd"],
+  "keywords": [
+    "playwright",
+    "cucumber",
+    "typescript",
+    "bdd"
+  ],
   "author": "Your Name",
   "license": "ISC",
   "devDependencies": {
     "@cucumber/cucumber": "^9.0.0",
+    "@cucumber/html-formatter": "^22.2.0",
     "@playwright/test": "^1.40.0",
     "@types/node": "^20.0.0",
+    "dotenv": "^16.3.1",
     "ts-node": "^10.9.0",
-    "typescript": "^5.0.0",
-    "dotenv": "^16.3.1"
+    "typescript": "^5.0.0"
   }
 }

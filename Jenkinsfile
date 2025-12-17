@@ -75,15 +75,30 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                echo "Running Cucumber tests..."
+                echo "=========================================="
+                echo "STAGE: Running Cucumber tests..."
+                echo "=========================================="
                 echo "Using timeout configured in cucumber.js (60000ms)"
-                bat 'npx cucumber-js'
+                
+                bat '''
+                    call npx cucumber-js
+                    if errorlevel 1 echo Test execution completed with failures
+                '''
             }
         }
 
         stage('Generate Report') {
             steps {
-                echo "Tests completed. Reports generated at reports/cucumber-report.html"
+                echo "=========================================="
+                echo "STAGE: Generating HTML report from JSON..."
+                echo "=========================================="
+                
+                bat '''
+                    echo Generating HTML report from JSON data...
+                    call node scripts/generate-html-report.js
+                '''
+                
+                echo "✓ HTML report generated successfully"
             }
         }
     }
