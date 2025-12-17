@@ -43,10 +43,10 @@ export class BasePage {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         await this.page.goto(url, { waitUntil });
-        console.log(`✓ Successfully navigated to: ${url}`);
+        console.log(`[OK] Successfully navigated to: ${url}`);
         return;
       } catch (error) {
-        console.warn(`⚠ Navigation attempt ${attempt}/${maxAttempts} failed for ${url}`);
+        console.warn(`[WARNING] Navigation attempt ${attempt}/${maxAttempts} failed for ${url}`);
         if (attempt === maxAttempts) {
           throw new Error(`Failed to navigate to ${url} after ${maxAttempts} attempts: ${error}`);
         }

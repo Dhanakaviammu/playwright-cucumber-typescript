@@ -38,7 +38,7 @@ export async function launchBrowser(browserType: 'chromium' | 'firefox' | 'webki
   const pageTimeout = parseInt(process.env.PAGE_TIMEOUT || '45000');
   const navigationTimeout = parseInt(process.env.NAVIGATION_TIMEOUT || '45000');
   
-  console.log(`🔧 Setting timeouts - Page: ${pageTimeout}ms, Navigation: ${navigationTimeout}ms`);
+  console.log(`[INFO] Setting timeouts - Page: ${pageTimeout}ms, Navigation: ${navigationTimeout}ms`);
   
   page.setDefaultTimeout(pageTimeout);
   page.setDefaultNavigationTimeout(navigationTimeout);
