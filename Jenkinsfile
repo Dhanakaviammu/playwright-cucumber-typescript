@@ -37,7 +37,7 @@ pipeline {
                     ]
                 ])
                 
-                echo "✓ Code checked out successfully"
+                echo "[OK] Code checked out successfully"
             }
         }
 
@@ -62,7 +62,7 @@ pipeline {
                     call npx playwright --version
                 '''
                 
-                echo "✓ Dependencies installed successfully"
+                echo "[OK] Dependencies installed successfully"
             }
         }
 
@@ -130,25 +130,25 @@ pipeline {
 
         success {
             echo ""
-            echo "╔════════════════════════════════════════╗"
-            echo "║  ✓ ALL TESTS PASSED SUCCESSFULLY!      ║"
-            echo "╚════════════════════════════════════════╝"
+            echo "==========================================="
+            echo "  [SUCCESS] ALL TESTS PASSED SUCCESSFULLY!"
+            echo "==========================================="
             echo "Build Status: SUCCESS"
             echo "Test Reports available at: ${BUILD_URL}artifact/reports/"
         }
 
         unstable {
             echo ""
-            echo "⚠ TESTS RAN BUT SOME FAILED"
+            echo "[WARNING] TESTS RAN BUT SOME FAILED"
             echo "Build Status: UNSTABLE"
             echo "Test Reports available at: ${BUILD_URL}artifact/reports/"
         }
 
         failure {
             echo ""
-            echo "╔════════════════════════════════════════╗"
-            echo "║  ✗ BUILD FAILED - TESTS DID NOT PASS   ║"
-            echo "╚════════════════════════════════════════╝"
+            echo "==========================================="
+            echo "  [FAILED] BUILD FAILED - TESTS DID NOT PASS"
+            echo "==========================================="
             echo "Build Status: FAILURE"
             echo "Test Reports available at: ${BUILD_URL}artifact/reports/"
             echo "Please check the console output and test artifacts."
