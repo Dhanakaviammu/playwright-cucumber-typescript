@@ -43,9 +43,9 @@ class LocatorHelper {
         }
       });
 
-      console.log(`✓ Loaded ${this.locators.size} locators from UILocators.properties`);
+      console.log(`[OK] Loaded ${this.locators.size} locators from UILocators.properties`);
     } catch (error) {
-      console.error(`✗ Error loading locators: ${error}`);
+      console.error(`[ERROR] Error loading locators: ${error}`);
       throw error;
     }
   }
