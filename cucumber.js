@@ -14,6 +14,6 @@ module.exports = {
     dryRun: false,
     failFast: false,
     retry: 0,
-    timeout: 60000  // Set Cucumber step timeout to 60 seconds (matches Playwright timeout)
+    timeout: 120000  // Set Cucumber timeout to 120 seconds (includes browser launch time + Playwright timeout)
   }
 };
