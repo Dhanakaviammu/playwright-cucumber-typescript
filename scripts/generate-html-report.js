@@ -18,7 +18,7 @@ try {
 
   // Check if NDJSON report exists
   if (!fs.existsSync(ndjsonReportPath)) {
-    console.log('⚠️  NDJSON report not found at:', ndjsonReportPath);
+    console.log('[WARNING] NDJSON report not found at:', ndjsonReportPath);
     console.log('Please run tests first: npm test');
     process.exit(1);
   }
@@ -26,11 +26,11 @@ try {
   // Verify the file has content
   const stats = fs.statSync(ndjsonReportPath);
   if (stats.size === 0) {
-    console.error('✗ NDJSON report is empty');
+    console.error('[ERROR] NDJSON report is empty');
     process.exit(1);
   }
 
-  console.log(`📊 Processing NDJSON report (${(stats.size / 1024).toFixed(2)} KB)...`);
+  console.log(`[INFO] Processing NDJSON report (${(stats.size / 1024).toFixed(2)} KB)...`);
 
   // Create a read stream from the NDJSON file (messages are already in NDJSON format)
   const messageStream = createReadStream(ndjsonReportPath, { encoding: 'utf-8' });
@@ -48,24 +48,24 @@ try {
   htmlStream.on('end', () => {
     // Verify we have HTML content
     if (!htmlContent || htmlContent.trim().length === 0) {
-      console.error('✗ HTML formatter produced empty output');
+      console.error('[ERROR] HTML formatter produced empty output');
       process.exit(1);
     }
     
     // Write to file
     fs.writeFileSync(htmlReportPath, htmlContent);
     const fileSizeKb = (htmlContent.length / 1024).toFixed(2);
-    console.log(`✓ HTML report generated successfully: ${fileSizeKb} KB`);
-    console.log(`✓ Report saved to: ${htmlReportPath}`);
+    console.log(`[OK] HTML report generated successfully: ${fileSizeKb} KB`);
+    console.log(`[OK] Report saved to: ${htmlReportPath}`);
   });
 
   htmlStream.on('error', (error) => {
-    console.error('✗ Error generating HTML report:', error.message);
+    console.error('[ERROR] Error generating HTML report:', error.message);
     process.exit(1);
   });
 
   messageStream.on('error', (error) => {
-    console.error('✗ Error reading NDJSON file:', error.message);
+    console.error('[ERROR] Error reading NDJSON file:', error.message);
     process.exit(1);
   });
 
@@ -73,6 +73,6 @@ try {
   messageStream.pipe(htmlStream);
 
 } catch (error) {
-  console.error('✗ Error:', error.message);
+  console.error('[ERROR] Error:', error.message);
   process.exit(1);
 }
