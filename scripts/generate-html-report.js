@@ -1,37 +1,41 @@
 #!/usr/bin/env node
 
 /**
- * Generate HTML report from Cucumber JSON report
+ * Generate HTML report from Cucumber NDJSON report
+ * NDJSON (newline-delimited JSON) is the proper format for Cucumber messages
  * Usage: node scripts/generate-html-report.js
  */
 
 const fs = require('fs');
 const path = require('path');
-const { Readable } = require('stream');
+const { createReadStream } = require('fs');
 const CucumberHtmlFormatter = require('@cucumber/html-formatter').default;
 
 try {
   const reportsDir = path.join(__dirname, '..', 'reports');
-  const jsonReportPath = path.join(reportsDir, 'cucumber-report.json');
+  const ndjsonReportPath = path.join(reportsDir, 'cucumber-report.ndjson');
   const htmlReportPath = path.join(reportsDir, 'cucumber-report.html');
 
-  // Check if JSON report exists
-  if (!fs.existsSync(jsonReportPath)) {
-    console.log('⚠️  JSON report not found at:', jsonReportPath);
+  // Check if NDJSON report exists
+  if (!fs.existsSync(ndjsonReportPath)) {
+    console.log('⚠️  NDJSON report not found at:', ndjsonReportPath);
     console.log('Please run tests first: npm test');
     process.exit(1);
   }
 
-  // Read the JSON report
-  const jsonData = fs.readFileSync(jsonReportPath, 'utf8');
-  const messages = JSON.parse(jsonData);
+  // Verify the file has content
+  const stats = fs.statSync(ndjsonReportPath);
+  if (stats.size === 0) {
+    console.error('✗ NDJSON report is empty');
+    process.exit(1);
+  }
 
-  // Create a readable stream from messages
-  const messageStream = Readable.from(
-    messages.map(msg => JSON.stringify(msg) + '\n')
-  );
+  console.log(`📊 Processing NDJSON report (${(stats.size / 1024).toFixed(2)} KB)...`);
 
-  // Create the HTML formatter stream (it's a class, so use 'new')
+  // Create a read stream from the NDJSON file (messages are already in NDJSON format)
+  const messageStream = createReadStream(ndjsonReportPath, { encoding: 'utf-8' });
+
+  // Create the HTML formatter stream
   const htmlStream = new CucumberHtmlFormatter();
 
   // Collect the HTML output
@@ -42,20 +46,33 @@ try {
   });
 
   htmlStream.on('end', () => {
+    // Verify we have HTML content
+    if (!htmlContent || htmlContent.trim().length === 0) {
+      console.error('✗ HTML formatter produced empty output');
+      process.exit(1);
+    }
+    
     // Write to file
     fs.writeFileSync(htmlReportPath, htmlContent);
-    console.log('✓ HTML report generated successfully at:', htmlReportPath);
+    const fileSizeKb = (htmlContent.length / 1024).toFixed(2);
+    console.log(`✓ HTML report generated successfully: ${fileSizeKb} KB`);
+    console.log(`✓ Report saved to: ${htmlReportPath}`);
   });
 
   htmlStream.on('error', (error) => {
-    console.error('✗ Error generating HTML report:', error);
+    console.error('✗ Error generating HTML report:', error.message);
     process.exit(1);
   });
 
-  // Pipe the messages through the HTML stream
+  messageStream.on('error', (error) => {
+    console.error('✗ Error reading NDJSON file:', error.message);
+    process.exit(1);
+  });
+
+  // Pipe the NDJSON messages through the HTML formatter
   messageStream.pipe(htmlStream);
 
 } catch (error) {
-  console.error('Error:', error);
+  console.error('✗ Error:', error.message);
   process.exit(1);
 }

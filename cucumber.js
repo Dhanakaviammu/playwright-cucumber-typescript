@@ -3,8 +3,8 @@ module.exports = {
     require: ['src/support/**/*.ts', 'src/hooks/**/*.ts', 'src/steps/**/*.ts'],
     requireModule: ['ts-node/register'],
     format: [
-      'progress', 
-      'json:reports/cucumber-report.json',
+      'progress',
+      'message:reports/cucumber-report.ndjson',
       'html:reports/cucumber-report.html'
     ],
     formatOptions: { snippetInterface: 'async-await' },
