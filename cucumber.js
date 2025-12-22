@@ -4,8 +4,7 @@ module.exports = {
     requireModule: ['ts-node/register'],
     format: [
       'progress',
-      'message:reports/cucumber-report.ndjson',
-      'html:reports/cucumber-report.html'
+      'message:reports/cucumber-report.ndjson'
     ],
     formatOptions: { snippetInterface: 'async-await' },
     parallel: 1,
